@@ -1,107 +1,116 @@
-var pokemonRepository = (function() {    //Start of IIFE
-  var repository = [];
-  var apiUrl = 'https://pokeapi.co/api/v2/pokemon/?limit=150';
-  var $pokemonList = $('ul');
+// IIFE wrap
+(function() {
+  var pokemonRepository = (function() {
+    var repository = [];
+    var apiUrl = 'https://pokeapi.co/api/v2/pokemon/?limit=150';
 
-  //Function to add new Pokemon data
-  function add(pokemon) {
-    //Must be an 'object' type
-    if (typeof pokemon !== 'object') {
-      return 'Not a valid input'
-    }else{
-    repository.push(pokemon);
+    // returns an array of values being pushed by the 'add()' function
+    function getAll() {
+      return repository;
     }
-  }
+    // pushes any values from 'loadList' function to the 'repository' array
+    function add(item) {
+      repository.push(item);
+    }
 
-  //Function to pull all Pokemon data
-  function getAll() {
-    return repository;
-  }
+    //fetch pokemon data from API and loop it in a json 'pokemon' object
+    function loadList() {
+      return $.ajax(apiUrl, {dataType: 'json'})
+        .then(function(item) {
+          $.each(item.results, function(index, item) {
+            var pokemon = {
+              name: item.name,
+              detailsUrl: item.url,
+            };
+            // Adds the retrieved data to the Repository
+            add(pokemon);
+          });
+        })
+        .catch(function(e) {
+          console.error(e);
+        });
+    }
 
-  //Function to add list for each pokemon object
+    function loadDetails(item) {
+      var url = item.detailsUrl;
+      return $.ajax(url)
+        .then(function(details) {
+          // add the details to the item
+          item.imageUrl = details.sprites.front_default;
+          item.height = details.height;
+          item.weight = details.weight;
+          item.types = details.types.map(function(pokemon) {
+            return pokemon.type.name;
+          });
+        })
+        .catch(function(e) {
+          console.error(e);
+        });
+    }
+    // returning all functions
+    return {
+      add: add,
+      getAll: getAll,
+      loadList: loadList,
+      loadDetails: loadDetails,
+    };
+  })();
+
+  var $pokemonList = $('.pokemon-list');
+
   function addListItem(pokemon) {
-    var $listItem = $('<li></li>');
-    $pokemonList.append($listItem);
-    var $button = $('<button type="button" id="pokemon-button" class="btn btn-outline-light" data-toggle="modal" data-target="#exampleModalCenter">' + pokemon.name + '</button>');
-    $listItem.append($button);
-    $button.on('click', function() {
-      showDetails(pokemon)
-    })
-  }
-
-  //Function to load pokemon list from API
-  function loadList() {
-    return $.ajax(apiUrl, {dataType: 'json'}).then(function(responseJSON) {
-      return responseJSON;
-    }).then(function(json) {
-      json.results.forEach(function(item) {
-        var pokemon = {
-          name: item.name,
-          detailsUrl: item.url
-        };
-        add(pokemon);
-      });
-    }).catch(function(e) {
-      console.error(e);
-    })
-  }
-
-  function loadDetails(item) {
-    var url = item.detailsUrl;
-    return $.ajax(url, {dataType: 'json'}).then(function(responseJSON) {
-      return responseJSON;
-    }).then(function(details) {
-      item.imageUrl = details.sprites.front_default;
-      item.height = details.height;
-      item.weight = details.weight;
-      item.types = Object.keys(details.types);
-    }).catch(function(e) {
-      console.error(e);
-    })
-  }
-
-  //Function to show modal for Pokemon data
-  function showModal(item) {
-    console.log('TCL: showModal -> item', item.imageUrl);
-
-    //create element for Pokemon name
-    var $nameElement = $('h5');
-    $nameElement.html(item.name.charAt(0).toUpperCase() + item.name.slice(1));
-
-    var $imageElement = $('<img src="' + item.imageUrl + '">')
-    $('div.pokemon-img').html($imageElement)
-
-    var $heightElement = $('div.pokemon-info');
-    $heightElement.html('Height: ' + item.height);
-  }
-
-  //Function to show details of each Pokemon
-  function showDetails(item) {
-    pokemonRepository.loadDetails(item).then(function() {
-      console.log(item);
-      return item;
-    }).then(function(item) {
-      console.log('TCL: showDetails -> item', item);
-      showModal(item);
+    var listItem = $(
+      '<button type="button" class="pokemon-list_item list-group-item list-group-item-action" data-toggle="modal" data-target="#pokemon-modal"></button>',
+    );
+    listItem.text(pokemon.name);
+    $pokemonList.append(listItem);
+    listItem.click(function() {
+      showDetails(pokemon);
     });
   }
 
-  return{
-    add: add,
-    getAll: getAll,
-    addListItem: addListItem,
-    showDetails: showDetails,
-    loadList: loadList,
-    loadDetails: loadDetails,
-    showModal: showModal,
-  };
-})();
+  //Modal display details about pokemon rom 'pokemon': img, height and type
+  function showDetails(pokemon) {
+    pokemonRepository.loadDetails(pokemon).then(function() {
+      // creates Modal
+      var modal = $('.modal-body');
+      /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "name" }]*/
+      var name = $('.modal-title').text(pokemon.name);
+      var height = $('<p class="pokemon-height"></p>').text(
+        'Height: ' + pokemon.height + ' Centimetres.',
+      );
+      var weight = $('<p class="pokemon-weight"></p>').text(
+        'Weight: ' + pokemon.weight + ' Kg.',
+      );
+      var type = $('<p class="pokemon-type"></p>').text(
+        'Type: ' + pokemon.types + '.',
+      );
+      var image = $('<img class="pokemon-picture">');
+      image.attr('src', pokemon.imageUrl);
 
+      if (modal.children().length) {
+        modal.children().remove();
+      }
 
-//Creates list of Pokemon with Pokemon's name on the button
-pokemonRepository.loadList().then(function() {
-  // Now the data is loaded!
-  pokemonRepository.getAll().forEach(function(pokemon){
-    pokemonRepository.addListItem(pokemon);
+      modal.append(image).append(height).append(weight).append(type);
+    });
+  }
+
+  //Search pokemons
+  $(document).ready(function() {
+    $('#pokemon-search').on('keyup', function() {
+      var value = $(this).val().toLowerCase();
+      $('.pokemon-list_item').filter(function() {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
   });
-});
+
+  pokemonRepository.loadList().then(function() {
+    var pokemons = pokemonRepository.getAll();
+
+    $.each(pokemons, function(index, pokemon) {
+      addListItem(pokemon);
+    });
+  });
+})(); //IIFE wrap

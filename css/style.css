@@ -1,60 +1,73 @@
-ul {
-  text-align: center;
-  position: absolute;
-  width: 95%;
-  margin: 10px auto 0;
-  padding: 10px;
+* {
   box-sizing: border-box;
 }
 
-li {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+body{
+  margin: 100px 50px 20px 50px;
+  font-size: 16pt;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
-button:hover, button:focus {
-  cursor: pointer;
-  opacity: 0.8;
+h1{
+  display: inline-block;
+  font-weight: 700;
 }
 
-.wrapper {
+h2 {
+  font-weight: 700;
+  font-size: 28px;
+}
+
+p {
+  font-weight: inherit;
+  font-size: 20px;
+}
+
+a,
+a:visited {
+  color: blue;
+  text-decoration: none;
+}
+
+.pokemon-list {
+  list-style-type: none;
+  margin-top: 65px;
+}
+
+.pokemon-picture {
+  height: 150px;
+  float: left;
+}
+
+footer {
+  margin-top: 60px;
+  text-align: center;
   width: 100%;
+  font-size: 14pt;
 }
 
-.pokemon-info {
-  margin-top: 40px;
-}
-
-#pokemon-button {
+.CTA{
+  font-family: Courier;
   margin-bottom: 5px;
-  width: 240px;
-  height: 50px;
-  border: 2px solid;
-  font-size: 15px;
-  border-radius: 4px;
 }
 
-#background {
-  background-image: url(../img/background1.jpg);
-  background-size: cover;
-  background-position: center center;
-  height: 100vh;
+.socialIcon{
+  height: 67px;
+  padding: 5px 15px 5px 15px;
 }
 
-@media only screen and (min-width: 768px){
-  #background {
-    background-image: url(../img/background.jpg);
-  }
-}
-
-@media only screen and (min-width: 1000px){
-  #background {
-    background-image: url(../img/background.jpg);
+@media all and (max-width: 720px) {
+  body{
+    font-size: 12pt;
   }
 
-  li {
-    align-items: flex-start;
-    justify-content: flex-start;
+  h1{
+    padding: 0;
+    text-align: center;
+  }
+
+  .socialIcon{
+    height: 40px;
   }
 }
